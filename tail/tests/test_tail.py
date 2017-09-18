@@ -7,7 +7,7 @@ from tail import FileBasedTail
 def test_tail_from_file():
     """Tests that tail works as advertised from a file"""
 
-    from unittest.mock import mock_open, patchi, Mock
+    from unittest.mock import mock_open, patch, Mock
 
     # The mock_data we are using for our test
     mock_data = """A
