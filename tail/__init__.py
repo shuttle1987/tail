@@ -1,1 +1,0 @@
-from .tail import tail
