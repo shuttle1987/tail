@@ -34,7 +34,7 @@ F
 
         # We also need to patch the file checking because we are not dealing
         # with an actual file in the filesystem in this unit test
-        with patch('tail.check_file_validity', mocked_file_validity_check):
+        with patch('tail.tail.check_file_validity', mocked_file_validity_check):
             res = FileBasedTail('Test_filename.txt').tail(3)
 
     mocked_file_validity_check.assert_called_once_with('Test_filename.txt')

@@ -1,1 +1,3 @@
-from .tail import FileBasedTail
+from .tail import (
+    FileBasedTail,
+)
