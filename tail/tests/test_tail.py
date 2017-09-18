@@ -7,7 +7,7 @@ from tail import FileBasedTail
 def test_tail_from_file():
     """Tests that tail works as advertised from a file"""
 
-    from unittest.mock import mock_open, patch
+    from unittest.mock import mock_open, patchi, Mock
 
     # The mock_data we are using for our test
     mock_data = """A
@@ -26,7 +26,7 @@ F
 
     # The file check in the class returns no value upon a valid file
     # the error states just raise exceptions.
-    mocked_file_validity_check = mock()
+    mocked_file_validity_check = Mock()
 
     # We need to patch the open found in the namespace of the module
     # where the function is defined
