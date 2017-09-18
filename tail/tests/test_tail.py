@@ -23,11 +23,21 @@ F
     # we must define the following:
     mocked_open.return_value.__iter__.return_value = mock_data.splitlines()
 
+
+    # The file check in the class returns no value upon a valid file
+    # the error states just raise exceptions.
+    mocked_file_validity_check = mock()
+
     # We need to patch the open found in the namespace of the module
     # where the function is defined
     with patch('tail.open', mocked_open, create=True) as mocked_file_open:
-        res = FileBasedTail('Test_filename.txt').tail(3)
 
+        # We also need to patch the file checking because we are not dealing
+        # with an actual file in the filesystem in this unit test
+        with patch('tail.check_file_validity', mocked_file_validity_check):
+            res = FileBasedTail('Test_filename.txt').tail(3)
+
+    mocked_file_validity_check.assert_called_once_with('Test_filename.txt')
     mocked_file_open.assert_called_once_with('Test_filename.txt', 'r')
     assert len(res) == 3
     assert res == ["D", "E", "F"]
