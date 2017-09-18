@@ -2,7 +2,7 @@
 Tests for the tail implementation
 """
 
-from tail import FileTail
+from tail import FileBasedTail
 
 def test_tail_from_file():
     """Tests that tail works as advertised from a file"""
@@ -25,8 +25,8 @@ F
 
     # We need to patch the open found in the namespace of the module
     # where the function is defined
-    with patch('mocking_file_opens.open', mocked_open, create=True) as mocked_file_open:
-        res = FileTail('Test_filename.txt').tail(3)
+    with patch('tail.open', mocked_open, create=True) as mocked_file_open:
+        res = FileBasedTail('Test_filename.txt').tail(3)
 
     mocked_file_open.assert_called_once_with('Test_filename.txt', 'r')
     assert len(res) == 3

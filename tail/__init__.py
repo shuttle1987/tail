@@ -1,1 +1,1 @@
-from .tail import tail
+from .tail import FileBasedTail
