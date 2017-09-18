@@ -11,6 +11,8 @@ python:
 before_install:
    - pip install pytest-cov
    - pip install coveralls
+
+install:
    - python setup.py install
 
 script:
