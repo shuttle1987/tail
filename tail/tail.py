@@ -11,7 +11,10 @@ class TailBase:
     Operations to extract the beginning or end of a stream
     """
     def __init__(self, initial_position):
-        self.position = initial_position
+        """
+        We have to keep track of the current position we are at.
+        """
+        self.position_index = initial_position
 
     def head(self, number_entries):
         """
@@ -26,6 +29,24 @@ class TailBase:
         :number_entries: how many items to retrieve
         """
         raise NotImplementedError()
+
+    def seek_forwards_to_next_separator(self):
+        """Seek forwards until the next separator is found"""
+        raise NotImplementedError()
+
+    def seek_backwards_to_next_separator(self):
+        """Seek backwards until the next separator is found, then set the position
+        to be just after that separator."""
+        raise NotImplementedError()
+
+    def read(self, read_size=None):
+        """Read from the stream.
+        :read_size: number of items to read from the current position onwards,
+                    if not parameter given the default is to read everything from the current position onwards.
+        :returns: A tuple of the length of the data and the data
+        """
+        raise NotImplementedError()
+
 
 class FileBasedTail(TailBase):
     """Implement tail operations for a file object"""
@@ -57,7 +78,15 @@ class FileBasedTail(TailBase):
         """Seek to the end of the file"""
         self.seek(0, 2)
 
-
+    def read(self, read_size=None):
+        """Read the next read_size bytes from the current file position or all of
+        the rest of the file if not specified.
+        """
+        if read_size:
+            data = self.file_obj.read(read_size)
+        else:
+            data = self.file_obj.read(read_size)
+        return len(data), data
 
 def check_file_validity(filename):
     """Check if a file exists is readable and is a vaild file"""
