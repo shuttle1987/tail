@@ -1,6 +1,8 @@
 """
 This module provides a Python implementation of functionality of the GNU tail command.
 """
+import os
+
 class TailError(Exception):
     """Tail exceptions"""
 
@@ -44,6 +46,10 @@ class FileBasedTail(TailBase):
 
 def check_file_validity(filename):
     """Check if a file exists is readable and is a vaild file"""
-    raise NotImplementedError()
-
+    if not os.access(filename, os.F_OK):
+        raise TailError("File '{}' does not exist".format(filename))
+    if not os.access(filename, os.R_OK):
+        raise TailError("File '{}' is not readable".format(filename))
+    if os.path.isdir(filename):
+        raise TailError("'{}' is a directory and not a file".format(filename))
 
