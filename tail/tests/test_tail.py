@@ -2,7 +2,7 @@
 Tests for the tail implementation
 """
 
-from tail import FileTail
+from tail import FileBasedTail
 
 def test_tail_from_file():
     """Tests that tail works as advertised from a file"""
