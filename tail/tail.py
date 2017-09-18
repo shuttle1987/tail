@@ -10,8 +10,8 @@ class TailBase:
     """
     Operations to extract the beginning or end of a stream
     """
-    def __init__(self):
-        raise NotImplementedError()
+    def __init__(self, initial_position):
+        self.position = initial_position
 
     def head(self, number_entries):
         """
@@ -36,12 +36,27 @@ class FileBasedTail(TailBase):
         """
         self.filename = filename
         check_file_validity(self.filename)
+        self.file_obj = open(filename)
 
     def tail(self, number_lines=10):
         """
         :number_lines: the number of lines to take from the end of the file
         """
         raise NotImplementedError()
+
+    def seek(self, position, whence=0):
+        """
+        Seek to position relative to place specified by whence
+        :position: where to move the filepointer to
+        :whence: which relative position to use, same as Python's file objects.
+                 0 is beginning of file, 1 is the current position, 2 is end of file position.
+        """
+        self.file_obj.seek(position, whence)
+
+    def seek_to_end(self):
+        """Seek to the end of the file"""
+        self.seek(0, 2)
+
 
 
 def check_file_validity(filename):
