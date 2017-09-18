@@ -23,7 +23,7 @@ class TailBase:
         """
         raise NotImplementedError()
 
-    def tail(self, number_entries):
+    def tail(self, number_entries=10):
         """
         Retrieve the last number of entries from the stream
         :number_entries: how many items to retrieve
@@ -41,11 +41,16 @@ class TailBase:
 
     def read(self, read_size=None):
         """Read from the stream.
-        :read_size: number of items to read from the current position onwards,
-                    if not parameter given the default is to read everything from the current position onwards.
+        :read_size: number of items to read from the current position onwards, if no parameter
+                    is given the default is to read everything from the current position onwards.
         :returns: A tuple of the length of the data and the data
         """
         raise NotImplementedError()
+
+    def current_position(self):
+        """Return the current index in the stream
+        """
+        return self.position_index
 
 
 class FileBasedTail(TailBase):
@@ -58,10 +63,11 @@ class FileBasedTail(TailBase):
         self.filename = filename
         check_file_validity(self.filename)
         self.file_obj = open(filename)
+        super().__init__()
 
-    def tail(self, number_lines=10):
+    def tail(self, number_entries=10):
         """
-        :number_lines: the number of lines to take from the end of the file
+        :number_entries: the number of lines to take from the end of the file
         """
         raise NotImplementedError()
 
@@ -88,6 +94,12 @@ class FileBasedTail(TailBase):
             data = self.file_obj.read(read_size)
         return len(data), data
 
+    def current_position(self):
+        """Return the current position in the file that the file pointer is pointed at"""
+        self.position_index = self.file_obj.tell()
+        return self.position_index
+
+
 def check_file_validity(filename):
     """Check if a file exists is readable and is a vaild file"""
     if not os.access(filename, os.F_OK):
@@ -96,4 +108,3 @@ def check_file_validity(filename):
         raise TailError("File '{}' is not readable".format(filename))
     if os.path.isdir(filename):
         raise TailError("'{}' is a directory and not a file".format(filename))
-
