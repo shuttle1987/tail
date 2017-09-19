@@ -10,11 +10,14 @@ class TailBase:
     """
     Operations to extract the beginning or end of a stream
     """
-    def __init__(self, initial_position):
+    def __init__(self, initial_position, read_buffer_size=None):
         """
         We have to keep track of the current position we are at.
+        :read_buffer_size: how many items to read ahead when searching for separators,
+                           if not given read until the end.
         """
         self.position_index = initial_position
+        self.read_size = read_buffer_size
 
     def head(self, number_entries):
         """
@@ -32,7 +35,8 @@ class TailBase:
 
     def seek_forwards_to_next_separator(self):
         """Seek forwards until the next separator is found"""
-        raise NotImplementedError()
+        start_position = pos = self.current_position()
+        bytes_read, data = self.read(self.read_size)
 
     def seek_backwards_to_next_separator(self):
         """Seek backwards until the next separator is found, then set the position
@@ -56,14 +60,15 @@ class TailBase:
 class FileBasedTail(TailBase):
     """Implement tail operations for a file object"""
 
-    def __init__(self, filename):
+    def __init__(self, filename, read_buffer_size=1024):
         """
         :filename: The name of the file to open
+        :read_buffer_size: How many bytes to read ahead
         """
         self.filename = filename
         check_file_validity(self.filename)
         self.file_obj = open(filename)
-        super().__init__()
+        super().__init__(read_buffer_size)
 
     def tail(self, number_entries=10):
         """
