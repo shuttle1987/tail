@@ -68,7 +68,7 @@ class FileBasedTail(TailBase):
         """
         self.filename = filename
         check_file_validity(self.filename)
-        self.file_obj = open(filename)
+        self.file_obj = open(filename, 'r')
         super().__init__(read_buffer_size)
 
     def head(self, lines=10):
