@@ -30,7 +30,7 @@ F
 
     # We need to patch the open found in the namespace of the module
     # where the function is defined
-    with patch('tail.open', mocked_open, create=True) as mocked_file_open:
+    with patch('builtins.open', mocked_open, create=True) as mocked_file_open:
 
         # We also need to patch the file checking because we are not dealing
         # with an actual file in the filesystem in this unit test
@@ -69,7 +69,7 @@ F
 
     # We need to patch the open found in the namespace of the module
     # where the function is defined
-    with patch('tail.open', mocked_open, create=True) as mocked_file_open:
+    with patch('builtins.open', mocked_open, create=True) as mocked_file_open:
 
         # We also need to patch the file checking because we are not dealing
         # with an actual file in the filesystem in this unit test
