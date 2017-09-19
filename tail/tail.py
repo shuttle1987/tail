@@ -10,6 +10,8 @@ class TailBase:
     """
     Operations to extract the beginning or end of a stream
     """
+    line_terminators = ('\r\n', '\n', '\r')
+
     def __init__(self, initial_position, read_buffer_size=None):
         """
         We have to keep track of the current position we are at.
@@ -43,6 +45,86 @@ class TailBase:
         to be just after that separator."""
         raise NotImplementedError()
 
+    def seek_line_backwards(self):
+        """
+        Searches backwards from the current position for a line terminator
+        and seeks to the position of character immediately after it.
+        :returns: Returns the position immediately after the line separator or None if not found.
+        """
+        pos = end_pos = self.current_position()
+
+        read_size = self.read_size
+        if pos > read_size:
+            pos -= read_size
+        else:
+            pos = 0
+            read_size = end_pos
+
+        self.seek(pos)
+
+        bytes_read, read_str = self.read(read_size)
+
+        if bytes_read and read_str[-1] in self.line_terminators:
+            # The last charachter is a line terminator, don't count this one
+            bytes_read -= 1
+
+            if read_str[-2:] == '\r\n' and '\r\n' in self.line_terminators:
+                # found crlf
+                bytes_read -= 1
+
+        while bytes_read > 0:
+            # Scan backwards, counting the newlines in the current buffer
+            i = bytes_read - 1
+            while i >= 0:
+                if read_str[i] in self.line_terminators:
+                    self.seek(pos + i + 1)
+                    return self.current_position()
+                i -= 1
+
+            if pos == 0 or pos - self.read_size < 0:
+                # Not enought lines in the buffer, send the whole file
+                self.seek(0)
+                return None
+
+            pos -= self.read_size
+            self.seek(pos)
+
+            bytes_read, read_str = self.read(self.read_size)
+
+        return None
+
+    def seek_line_forward(self):
+        """
+        Searches forward from the current file position for a line separator
+        and seeks to the position of character immediately after it.
+        :returns: Returns the position immediately after the line separator or None if not found.
+        """
+        pos = self.current_position()
+
+        bytes_read, read_str = self.read(self.read_size)
+
+        start = 0
+        if bytes_read and read_str[0] in self.line_terminators:
+            # If the first character is a line terminator skip over it
+            start += 1
+
+        while bytes_read > 0:
+            # Now we scan forwards,for line terminators in the current buffer
+            i = start
+            while i < bytes_read:
+                if read_str[i] in self.line_terminators:
+                    self.seek(pos + i + 1)
+                    return self.current_position()
+                i += 1
+
+            pos += self.read_size
+            self.seek(pos)
+
+            bytes_read, read_str = self.read(self.read_size)
+
+        return None
+
+
     def read(self, read_size=None):
         """Read from the stream.
         :read_size: number of items to read from the current position onwards, if no parameter
@@ -59,7 +141,6 @@ class TailBase:
 
 class FileBasedTail(TailBase):
     """Implement tail operations for a file object"""
-    line_terminators = ('\r\n', '\n', '\r')
 
     def __init__(self, filename, read_buffer_size=1024):
         """
@@ -122,84 +203,6 @@ class FileBasedTail(TailBase):
         """Seek to the end of the file"""
         self.seek(0, 2)
 
-    def seek_line_forward(self):
-        """
-        Searches forward from the current file position for a line separator
-        and seeks to the charachter after it.
-        :returns: Returns the position immediately after the line separator or None if not found.
-        """
-        pos = self.current_position()
-
-        bytes_read, read_str = self.read(self.read_size)
-
-        start = 0
-        if bytes_read and read_str[0] in self.line_terminators:
-            # If the first charachter is a line terminator skip over it
-            start += 1
-
-        while bytes_read > 0:
-            # Scan forwards, counting the newlines in the current buffer
-            i = start
-            while i < bytes_read:
-                if read_str[i] in self.line_terminators:
-                    self.seek(pos + i + 1)
-                    return self.current_position()
-                i += 1
-
-            pos += self.read_size
-            self.seek(pos)
-
-            bytes_read, read_str = self.read(self.read_size)
-
-        return None
-
-    def seek_line_backwards(self):
-        """
-        Searches backwards from the current file position for a line terminator
-        and seeks to the charachter after it.
-        :returns: Returns the position immediately after the line separator or None if not found.
-        """
-        pos = end_pos = self.current_position()
-
-        read_size = self.read_size
-        if pos > read_size:
-            pos -= read_size
-        else:
-            pos = 0
-            read_size = end_pos
-
-        self.seek(pos)
-
-        bytes_read, read_str = self.read(read_size)
-
-        if bytes_read and read_str[-1] in self.line_terminators:
-            # The last charachter is a line terminator, don't count this one
-            bytes_read -= 1
-
-            if read_str[-2:] == '\r\n' and '\r\n' in self.line_terminators:
-                # found crlf
-                bytes_read -= 1
-
-        while bytes_read > 0:
-            # Scan backwards, counting the newlines in the current buffer
-            i = bytes_read - 1
-            while i >= 0:
-                if read_str[i] in self.line_terminators:
-                    self.seek(pos + i + 1)
-                    return self.current_position()
-                i -= 1
-
-            if pos == 0 or pos - self.read_size < 0:
-                # Not enought lines in the buffer, send the whole file
-                self.seek(0)
-                return None
-
-            pos -= self.read_size
-            self.seek(pos)
-
-            bytes_read, read_str = self.read(self.read_size)
-
-        return None
 
     def read(self, read_size=None):
         """Read the next read_size bytes from the current file position or all of
