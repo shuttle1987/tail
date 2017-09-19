@@ -105,6 +105,7 @@ class FileBasedTail(TailBase):
                  0 is beginning of file, 1 is the current position, 2 is end of file position.
         """
         self.file_obj.seek(position, whence)
+        self.position_index = self.file_obj.tell()
 
     def seek_to_end(self):
         """Seek to the end of the file"""
@@ -148,7 +149,7 @@ class FileBasedTail(TailBase):
         if read_size:
             data = self.file_obj.read(read_size)
         else:
-            data = self.file_obj.read(read_size)
+            data = self.file_obj.read()
         return len(data), data
 
     def current_position(self):
