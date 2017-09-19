@@ -82,10 +82,10 @@ class FileBasedTail(TailBase):
             if not self.seek_line_forward():
                 break
 
-        end_pos = self.file_obj.tell()
+        end_pos = self.current_position()
 
         self.seek(0)
-        data = self.file_obj.read(end_pos - 1)
+        _, data = self.read(end_pos - 1)
 
         if data:
             return data.splitlines()
@@ -103,7 +103,7 @@ class FileBasedTail(TailBase):
             if not self.seek_line_backwards():
                 break
 
-        data = self.file_obj.read(end_pos - self.file_obj.tell() - 1)
+        _, data = self.read(end_pos - self.current_position() - 1)
         if data:
             return data.splitlines()
         return []
