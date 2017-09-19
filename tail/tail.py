@@ -69,7 +69,7 @@ class FileBasedTail(TailBase):
         self.filename = filename
         check_file_validity(self.filename)
         self.file_obj = open(filename, 'r')
-        super().__init__(read_buffer_size)
+        super().__init__(initial_position=0, read_buffer_size=read_buffer_size)
 
     def head(self, lines=10):
         """
@@ -91,11 +91,22 @@ class FileBasedTail(TailBase):
             return data.splitlines()
         return []
 
-    def tail(self, number_entries=10):
+    def tail(self, lines=10):
         """
-        :number_entries: the number of lines to take from the end of the file
+        Get the last number of lines from a file
+        :lines: the number of lines to take from the end of the file
         """
-        raise NotImplementedError()
+        self.seek_to_end()
+        end_pos = self.current_position()
+
+        for _ in range(lines):
+            if not self.seek_line_backwards():
+                break
+
+        data = self.file_obj.read(end_pos - self.file_obj.tell() - 1)
+        if data:
+            return data.splitlines()
+        return []
 
     def seek(self, position, whence=0):
         """
@@ -136,6 +147,54 @@ class FileBasedTail(TailBase):
                 i += 1
 
             pos += self.read_size
+            self.seek(pos)
+
+            bytes_read, read_str = self.read(self.read_size)
+
+        return None
+
+    def seek_line_backwards(self):
+        """
+        Searches backwards from the current file position for a line terminator
+        and seeks to the charachter after it.
+        :returns: Returns the position immediately after the line separator or None if not found.
+        """
+        pos = end_pos = self.current_position()
+
+        read_size = self.read_size
+        if pos > read_size:
+            pos -= read_size
+        else:
+            pos = 0
+            read_size = end_pos
+
+        self.seek(pos)
+
+        bytes_read, read_str = self.read(read_size)
+
+        if bytes_read and read_str[-1] in self.line_terminators:
+            # The last charachter is a line terminator, don't count this one
+            bytes_read -= 1
+
+            if read_str[-2:] == '\r\n' and '\r\n' in self.line_terminators:
+                # found crlf
+                bytes_read -= 1
+
+        while bytes_read > 0:
+            # Scan backwards, counting the newlines in the current buffer
+            i = bytes_read - 1
+            while i >= 0:
+                if read_str[i] in self.line_terminators:
+                    self.seek(pos + i + 1)
+                    return self.current_position()
+                i -= 1
+
+            if pos == 0 or pos - self.read_size < 0:
+                # Not enought lines in the buffer, send the whole file
+                self.seek(0)
+                return None
+
+            pos -= self.read_size
             self.seek(pos)
 
             bytes_read, read_str = self.read(self.read_size)
