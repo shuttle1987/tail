@@ -35,16 +35,6 @@ class TailBase:
         """
         raise NotImplementedError()
 
-    def seek_forwards_to_next_separator(self):
-        """Seek forwards until the next separator is found"""
-        start_position = pos = self.current_position()
-        bytes_read, data = self.read(self.read_size)
-
-    def seek_backwards_to_next_separator(self):
-        """Seek backwards until the next separator is found, then set the position
-        to be just after that separator."""
-        raise NotImplementedError()
-
     def seek_line_backwards(self):
         """
         Searches backwards from the current position for a line terminator
@@ -92,6 +82,11 @@ class TailBase:
             bytes_read, read_str = self.read(self.read_size)
 
         return None
+
+    def seek(self, position):
+        """Seek in the underlying data, specalizations to be implemented by derived classes"""
+        self.position_index = position
+
 
     def seek_line_forward(self):
         """
